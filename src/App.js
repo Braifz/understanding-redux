@@ -35,36 +35,6 @@ export const reducer = combineReducers({
   filter: filterReducer,
 });
 
-// export const reducer = (state = initialState, action) => {
-//   switch (action.type) {
-//     case "todo/add": {
-//       return {
-//         ...state,
-//         entities: state.entities.concat({ ...action.payload }),
-//       };
-//     }
-//     case "todo/complete": {
-//       const newTodos = state.entities.map((todo) => {
-//         if (todo.id === action.payload.id) {
-//           return { ...todo, completed: !todo.completed };
-//         }
-//         return todo;
-//       });
-//       return {
-//         ...state,
-//         entities: newTodos,
-//       };
-//     }
-//     case "filter/set": {
-//       return {
-//         ...state,
-//         filter: action.payload,
-//       };
-//     }
-//   }
-//   return state;
-// };
-
 const selectTodos = (state) => {
   const { entities, filter } = state;
 
