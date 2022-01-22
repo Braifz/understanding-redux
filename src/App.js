@@ -30,8 +30,23 @@ export const filterReducer = (state = "all", action) => {
   }
 };
 
-const initialFetching = { loading: "idle" };
-export const fetchingReducer = (state = initialFetching, action) => {};
+const initialFetching = { loading: "idle", error: null };
+export const fetchingReducer = (state = initialFetching, action) => {
+  switch (action.type) {
+    case "todos/pending": {
+      return { ...state, loading: "pending" };
+    }
+    case "todos/fulfilled": {
+      return { ...state, loading: "succeded" };
+    }
+    case "todos/error": {
+      return { error: action.error, loading: "rejected" };
+    }
+    default: {
+      return state;
+    }
+  }
+};
 
 export const todosReducer = (state = [], action) => {
   switch (action.type) {
@@ -56,12 +71,18 @@ export const todosReducer = (state = [], action) => {
 };
 
 export const reducer = combineReducers({
-  entities: todosReducer,
+  todos: combineReducers({
+    entities: todosReducer,
+    status: fetchingReducer,
+  }),
   filter: filterReducer,
 });
 
 const selectTodos = (state) => {
-  const { entities, filter } = state;
+  const {
+    todos: { entities },
+    filter,
+  } = state;
 
   if (filter === "complete") {
     return entities.filter((todo) => todo.completed);
@@ -72,6 +93,8 @@ const selectTodos = (state) => {
   }
   return entities;
 };
+
+const selectStatus = (state) => state.todos.status;
 
 const TodoItem = ({ todo }) => {
   const dispatch = useDispatch();
@@ -89,6 +112,7 @@ const App = () => {
   const [value, setValue] = useState("");
   const dispatch = useDispatch();
   const todos = useSelector(selectTodos);
+  const status = useSelector(selectStatus);
 
   const submit = (e) => {
     e.preventDefault();
@@ -100,6 +124,14 @@ const App = () => {
     dispatch({ type: "todo/add", payload: todo });
     setValue("");
   };
+
+  if (status.loading === "pending") {
+    return <p>Cargando...</p>;
+  }
+
+  if (status.loading === "rejected") {
+    return <p>{status.error}</p>;
+  }
 
   return (
     <div>
