@@ -2,6 +2,25 @@ import { useState } from "react";
 import { combineReducers } from "redux";
 import { useDispatch, useSelector } from "react-redux";
 
+export const asyncMiddleware = (store) => (next) => (action) => {
+  if (typeof action === "function") {
+    return action(store.dispatch, store.getState);
+  }
+  return next(action);
+};
+
+export const fetchThunk = () => async (dispatch) => {
+  dispatch({ type: "todos/pending" });
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos");
+    const data = await response.json();
+    const todos = data.slice(0, 10);
+    dispatch({ type: "todos/fulfilled", payload: todos });
+  } catch (e) {
+    dispatch({ type: "todos/error", error: e.message });
+  }
+};
+
 export const filterReducer = (state = "all", action) => {
   switch (action.type) {
     case "filter/set":
@@ -11,8 +30,14 @@ export const filterReducer = (state = "all", action) => {
   }
 };
 
+const initialFetching = { loading: "idle" };
+export const fetchingReducer = (state = initialFetching, action) => {};
+
 export const todosReducer = (state = [], action) => {
   switch (action.type) {
+    case "todos/fulfilled": {
+      return action.payload;
+    }
     case "todo/add": {
       return state.concat({ ...action.payload });
     }
@@ -98,6 +123,7 @@ const App = () => {
       >
         Incompletos
       </button>
+      <button onClick={() => dispatch(fetchThunk())}>Fetch</button>
       <ul>
         {todos.map((todo) => (
           <TodoItem key={todo.id} todo={todo} />
